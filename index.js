@@ -85,13 +85,72 @@ const employeePrompt = [
   // manager (default null)
 ];
 
-const employeeUpdateRole = [
+const employeeUpdateRolePrompt = [
   // select employee (list)
   // select role (role)
 ];
 
-const act = () => {
-  inq.prompt(menu).then(ans => {
+
+const db = mysql.createConnection(config, console.log("connected to db"));
+
+const menuPrompt = () => {
+  return inq.prompt(menu).then(ans => {
+    return ans.opt;
   });
 };
+
+const getDepartments = () => {
+  db.query(`SELECT * FROM departments;`, (err, res) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(table.getTable(res));
+    }
+  });
+}
+const getRoles = () => {
+  db.query(`SELECT * FROM roles;`, (err, res) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(table.getTable(res));
+    }
+  });
+}
+const getEmployees = () => {
+  db.query(`SELECT * FROM employees;`, (err, res) => {
+    if (err) {
+      console.log(err);
+    } else {
+      console.log(table.getTable(res));
+    }
+  })
+}
+const addDepartment = () => {
+  inq.prompt(departmentPrompt).then();
+}
+const addRole = () => {
+  inq.prompt(rolePrompt).then();
+}
+const addEmployee = () => {
+  inq.prompt(employeePrompt).then();
+}
+const updateEmployeeRole = () => {
+  inq.prompt(employeeUpdateRolePrompt).then();
+}
+
+const actions = {
+  "view_dept": getDepartments,
+  "view_roles": getRoles,
+  "view_empl": getEmployees,
+  "add_dept": addDepartment,
+  "add_role": addRole,
+  "add_empl": addEmployee,
+  "update_empl_role": updateEmployeeRole,
+};
+
+menuPrompt().then(opt => {
+  console.log(opt);
+  actions[opt]();
+});
 
