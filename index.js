@@ -109,7 +109,9 @@ const getDepartments = () => {
   });
 }
 const getRoles = () => {
-  db.query(`SELECT * FROM roles;`, (err, res) => {
+  db.query(`SELECT roles.title as title, roles.id, departments.dept_name as department, roles.salary` +
+  `FROM roles JOIN departments ON roles.department_id=departments.id;`,
+  (err, res) => {
     if (err) {
       console.log(err);
     } else {
@@ -118,7 +120,10 @@ const getRoles = () => {
   });
 }
 const getEmployees = () => {
-  db.query(`SELECT * FROM employees;`, (err, res) => {
+  // id, first name, last name, title, department, salary, manager
+  db.query(`SELECT employees.id, employees.first_name, employees.last_name, roles.title,
+  departments.dept_name as department, roles.salary, employees.manager_id
+  FROM employees JOIN roles ON employees.role_id=roles.id JOIN departments on roles.department_id=departments.id;`, (err, res) => {
     if (err) {
       console.log(err);
     } else {
