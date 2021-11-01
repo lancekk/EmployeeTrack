@@ -59,7 +59,7 @@ const departmentPrompt = [
   },
 ];
 
-const rolePrompt = [
+let rolePrompt = [
   {
     name: "role_name",
     type: "input",
@@ -74,7 +74,12 @@ const rolePrompt = [
     name: "role_dept",
     type: "list",
     message: "Please select the role's department: ",
-    choices: (inqs) => {} // TODO: fill in
+    choices: async (inqs) => {
+      return db.promise().query(`SELECT id, dept_name FROM departments;`)
+      .then((res) => {
+          return res[0].map(dept => { return {name: dept.dept_name, value: dept.id, short: dept.dept_name};});
+      }).catch(rej => console.log(rej));
+    }
   }
 ];
 
@@ -143,7 +148,16 @@ const addDepartment = () => {
   });
 }
 const addRole = () => {
-  inq.prompt(rolePrompt).then();
+  inq.prompt(rolePrompt).then(ans => {
+    db.query(`INSERT INTO roles (title, salary, department_id)
+    VALUES ("${ans.role_name}", ${ans.role_salary}, ${ans.role_dept})`, (err, res) => {
+      if (err) {
+        console.log(err);
+      } else {
+        console.log(table.getTable(res));
+      }
+    });
+  });
 }
 const addEmployee = () => {
   inq.prompt(employeePrompt).then();
