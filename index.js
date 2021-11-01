@@ -126,7 +126,30 @@ const employeePrompt = [
 
 const employeeUpdateRolePrompt = [
   // select employee (list)
+  {
+    name: "employee",
+    type: "list",
+    message: "Please select the employee to update:",
+    choices: (inqs) => {
+      return db.promise().query(`SELECT id, first_name, last_name FROM employees;`)
+      .then(res => {
+        return res[0].map(employee =>
+          { return {name: `${employee.first_name} ${employee.last_name}`, value: employee.id, short: employee.first_name};});
+      });
+    },
+  },
   // select role (list)
+  {
+    name: "role",
+    type: "list",
+    message: "Please select the employee's new role:",
+    choices: (inqs) => {
+      return db.promise().query(`SELECT id, title FROM roles;`)
+      .then(res => {
+        return res[0].map(role => { return {name: role.title, value: role.id, short: role.title}; });
+      });
+    },
+  },
 ];
 
 
@@ -203,7 +226,11 @@ const addEmployee = () => {
   });
 }
 const updateEmployeeRole = () => {
-  inq.prompt(employeeUpdateRolePrompt).then();
+  inq.prompt(employeeUpdateRolePrompt).then(ans => {
+    const query_string = `UPDATE employees SET role_id=${ans.role} WHERE employees.id=${ans.employee};`;
+    db.promise().query(query_string)
+    .then(res => console.log(res));
+  });
 }
 
 const actions = {
