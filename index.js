@@ -196,10 +196,8 @@ const addRole = () => {
 const addEmployee = () => {
   inq.prompt(employeePrompt).then(ans => {
     //first_name, last_name, empl_role, empl_manager
-    console.log(ans);
     const query_string = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
     VALUES ("${ans.first_name}", "${ans.last_name}", ${ans.empl_role}, ${ans.empl_manager});`;
-    console.log(query_string);
     db.promise().query(query_string)
     .then(res => console.log(res));
   });
