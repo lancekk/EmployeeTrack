@@ -55,7 +55,7 @@ const departmentPrompt = [
   {
     name: "dept_name",
     type: "input",
-    message: "Please enter the department name"
+    message: "Please enter the department name: "
   },
 ];
 
@@ -63,17 +63,17 @@ const rolePrompt = [
   {
     name: "role_name",
     type: "input",
-    message: "Please enter the role's name"
+    message: "Please enter the role's name: "
   },
   {
     name: "role_salary",
     type: "input",
-    message: "Please enter the role's salary"
+    message: "Please enter the role's salary: "
   },
   {
     name: "role_dept",
     type: "list",
-    message: "Please select the role's department",
+    message: "Please select the role's department: ",
     choices: (inqs) => {} // TODO: fill in
   }
 ];
@@ -132,7 +132,15 @@ const getEmployees = () => {
   })
 }
 const addDepartment = () => {
-  inq.prompt(departmentPrompt).then();
+  inq.prompt(departmentPrompt).then(ans => {
+    db.query(`INSERT INTO departments (dept_name) VALUES ("${ans.dept_name}");`, (err, res) => {
+      if (err) {
+        console.log(err)
+      } else {
+        console.log(table.getTable(res));
+      }
+    })
+  });
 }
 const addRole = () => {
   inq.prompt(rolePrompt).then();
