@@ -85,14 +85,48 @@ let rolePrompt = [
 
 const employeePrompt = [
   // first name
+  {
+    name: "first_name",
+    type: "input",
+    message: "Please enter the employee's first name:"
+  },
   // last name
+  {
+    name: "last_name",
+    type: "input",
+    message: "Please enter the employee's last name:"
+  },
   // role
+  {
+    name: "empl_role",
+    type: "list",
+    message: "Please select the employee's role:",
+    choices: (inqs) => {
+      return db.promise().query(`SELECT id, title FROM roles;`)
+      .then(res => {
+        return res[0].map(role => { return {name: role.title, value: role.id, short: role.title}; });
+      });
+    },
+  },
   // manager (default null)
+  {
+    name: "empl_manager",
+    type: "list",
+    message: "Please select the employee's manager:",
+    choices: (inqs) => {
+      return db.promise().query(`SELECT id, first_name, last_name FROM employees;`)
+      .then(res => {
+        return [{name: "NULL", value: "NULL", short: "NULL"}, ...res[0].map(employee =>
+          { return {name: `${employee.first_name} ${employee.last_name}`, value: employee.id, short: employee.first_name}; })];
+      });
+    },
+    default: "NULL",
+  },
 ];
 
 const employeeUpdateRolePrompt = [
   // select employee (list)
-  // select role (role)
+  // select role (list)
 ];
 
 
@@ -160,7 +194,15 @@ const addRole = () => {
   });
 }
 const addEmployee = () => {
-  inq.prompt(employeePrompt).then();
+  inq.prompt(employeePrompt).then(ans => {
+    //first_name, last_name, empl_role, empl_manager
+    console.log(ans);
+    const query_string = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
+    VALUES ("${ans.first_name}", "${ans.last_name}", ${ans.empl_role}, ${ans.empl_manager});`;
+    console.log(query_string);
+    db.promise().query(query_string)
+    .then(res => console.log(res));
+  });
 }
 const updateEmployeeRole = () => {
   inq.prompt(employeeUpdateRolePrompt).then();
