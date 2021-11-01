@@ -10,7 +10,7 @@ const menu = [
   {
     name: "opt",
     type: "list",
-    message: "Choose an option: ",
+    message: "Choose an option:",
     choices: [
       {
         name: "View all departments",
@@ -46,6 +46,11 @@ const menu = [
         name: "Update employee role",
         value: "update_empl_role",
         short: "update role",
+      },
+      {
+        name: "Quit",
+        value: "quit",
+        short: "quit"
       }
     ]
   }
@@ -55,7 +60,7 @@ const departmentPrompt = [
   {
     name: "dept_name",
     type: "input",
-    message: "Please enter the department name: "
+    message: "Please enter the department name:"
   },
 ];
 
@@ -63,17 +68,17 @@ let rolePrompt = [
   {
     name: "role_name",
     type: "input",
-    message: "Please enter the role's name: "
+    message: "Please enter the role's name:"
   },
   {
     name: "role_salary",
     type: "input",
-    message: "Please enter the role's salary: "
+    message: "Please enter the role's salary:"
   },
   {
     name: "role_dept",
     type: "list",
-    message: "Please select the role's department: ",
+    message: "Please select the role's department:",
     choices: async (inqs) => {
       return db.promise().query(`SELECT id, dept_name FROM departments;`)
       .then((res) => {
@@ -162,74 +167,48 @@ const menuPrompt = () => {
 };
 
 const getDepartments = () => {
-  db.query(`SELECT * FROM departments;`, (err, res) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(table.getTable(res));
-    }
-  });
+  return db.promise().query(`SELECT * FROM departments;`)
+  .then(res => { return table.getTable(res[0]); });
 }
 const getRoles = () => {
-  db.query(`SELECT roles.title as title, roles.id, departments.dept_name as department, roles.salary` +
-  `FROM roles JOIN departments ON roles.department_id=departments.id;`,
-  (err, res) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(table.getTable(res));
-    }
+  return db.promise().query(`SELECT roles.title as title, roles.id, departments.dept_name as department, roles.salary
+  FROM roles JOIN departments ON roles.department_id=departments.id;`)
+  .then(res => {
+    return table.getTable(res[0]);
   });
 }
 const getEmployees = () => {
   // id, first name, last name, title, department, salary, manager
-  db.query(`SELECT employees.id, employees.first_name, employees.last_name, roles.title,
+  return db.promise().query(`SELECT employees.id, employees.first_name, employees.last_name, roles.title,
   departments.dept_name as department, roles.salary, employees.manager_id
-  FROM employees JOIN roles ON employees.role_id=roles.id JOIN departments on roles.department_id=departments.id;`, (err, res) => {
-    if (err) {
-      console.log(err);
-    } else {
-      console.log(table.getTable(res));
-    }
-  })
+  FROM employees JOIN roles ON employees.role_id=roles.id JOIN departments on roles.department_id=departments.id;`)
+  .then(res => table.getTable(res[0]));
 }
 const addDepartment = () => {
-  inq.prompt(departmentPrompt).then(ans => {
-    db.query(`INSERT INTO departments (dept_name) VALUES ("${ans.dept_name}");`, (err, res) => {
-      if (err) {
-        console.log(err)
-      } else {
-        console.log(table.getTable(res));
-      }
-    })
+  return inq.prompt(departmentPrompt).then(ans => {
+    return db.promise().query(`INSERT INTO departments (dept_name) VALUES ("${ans.dept_name}");`)
+    .then(res => table.getTable(res[0]));
   });
 }
 const addRole = () => {
-  inq.prompt(rolePrompt).then(ans => {
-    db.query(`INSERT INTO roles (title, salary, department_id)
-    VALUES ("${ans.role_name}", ${ans.role_salary}, ${ans.role_dept})`, (err, res) => {
-      if (err) {
-        console.log(err);
-      } else {
-        console.log(table.getTable(res));
-      }
-    });
+  return inq.prompt(rolePrompt).then(ans => {
+    return db.promise().query(`INSERT INTO roles (title, salary, department_id)
+    VALUES ("${ans.role_name}", ${ans.role_salary}, ${ans.role_dept})`)
+    .then(res => table.getTable(res[0]));
   });
 }
 const addEmployee = () => {
-  inq.prompt(employeePrompt).then(ans => {
+  return inq.prompt(employeePrompt).then(ans => {
     //first_name, last_name, empl_role, empl_manager
     const query_string = `INSERT INTO employees (first_name, last_name, role_id, manager_id)
     VALUES ("${ans.first_name}", "${ans.last_name}", ${ans.empl_role}, ${ans.empl_manager});`;
-    db.promise().query(query_string)
-    .then(res => console.log(res));
+    return db.promise().query(query_string);
   });
 }
 const updateEmployeeRole = () => {
-  inq.prompt(employeeUpdateRolePrompt).then(ans => {
+  return inq.prompt(employeeUpdateRolePrompt).then(ans => {
     const query_string = `UPDATE employees SET role_id=${ans.role} WHERE employees.id=${ans.employee};`;
-    db.promise().query(query_string)
-    .then(res => console.log(res));
+    return db.promise().query(query_string);
   });
 }
 
@@ -243,8 +222,16 @@ const actions = {
   "update_empl_role": updateEmployeeRole,
 };
 
-menuPrompt().then(opt => {
-  console.log(opt);
-  actions[opt]();
-});
+const main = async () => {
+  let opt;
+  while ((opt = await menuPrompt()) !== "quit") {
+    let display = await actions[opt]();
+    if (opt.includes("view"))
+      console.log(display);
+  }
+  db.end();
+}
+
+main();
+
 
